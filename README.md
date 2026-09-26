@@ -36,13 +36,13 @@ In this app user can send and receive mails, and AI reads every mail. AI tells t
 
 ## Screenshots
 
-| Read Mail with AI                                   | Daily Briefing                                          |
-| --------------------------------------------------- | ------------------------------------------------------- |
+| Read Mail with AI | Daily Briefing |
+|---|---|
 | ![Read mail](screenshots/ai-mailbox-read-mail.webp) | ![Daily briefing](screenshots/ai-mailbox-briefing.webp) |
 
-| Compose with AI                                 |
-| ----------------------------------------------- |
-| ![Compose](screenshots/ai-mailbox-compose.webp) |
+| Smart Reply with AI |
+|---|
+| ![Smart reply](screenshots/ai-mailbox-reply.webp) |
 
 ## What I Learned
 
