@@ -1,40 +1,25 @@
-# AI Mailbox - Intelligent Email Management & Action Assistant
+# AI Mailbox - Smart Email App with AI
 
 This is my AI Mailbox project made with React, Firebase and Gemini AI.
-In this app user can send and receive mails, and AI reads every mail. It tells the priority, finds tasks, deadlines and meetings, and tells what to do next.
+In this app user can send and receive mails, and AI reads every mail. AI tells the priority, finds tasks, deadlines and meetings, and writes reply for the mail.
 
-**Live Link:** https://ai-mailbox.vercel.app
+**Live Link:** https://ai-mailbox-eight.vercel.app
 
 ![Inbox](screenshots/ai-mailbox-inbox.webp)
-
-## Example
-
-Mail: "Review dashboard and share feedback by Friday. Join Monday's meeting."
-
-AI shows:
-
-- Action: Review dashboard and share feedback
-- Deadline: Friday
-- Meeting: Monday
-- Reply Required: Yes
-- Suggested Reply: written by AI
 
 ## Features
 
 - Sign up and login using Firebase Authentication
-- Send and receive mails between registered users
-- Inbox updates live when new mail comes (Firestore)
-- AI summary of every mail
-- Priority for every mail: Urgent, Important or Normal
+- Send and receive mails between users
+- Inbox updates live when new mail comes
+- AI gives short summary of every mail
+- AI gives priority to every mail (Urgent, Important or Normal)
 - AI finds tasks, deadlines and meetings from the mail
-- AI writes a reply based on the mail
-- Tone changer: Professional, Friendly or Concise
-- Write a full mail from one line
-- Follow-ups page shows mails where someone is waiting for reply
-- Smart search in simple English, like "mails from priya about invoice"
-- Daily briefing page with urgent mails, tasks, meetings and pending replies
-- Action center with all tasks from all mails in one place
-- If Gemini is not working, simple offline rules still work
+- AI writes reply and can change tone (Professional, Friendly or Concise)
+- Search mails in simple English, like "mails from priya about invoice"
+- Daily briefing page with urgent mails, tasks and meetings
+- Follow-ups page and action center for pending work
+- If Gemini is not working, app still works with simple offline rules
 
 ## Tech Used
 
@@ -43,42 +28,40 @@ AI shows:
 - Vite
 - React Router
 - React Bootstrap
-- Context API and useReducer
+- Context API
 - Firebase Authentication
 - Firestore Database
-- Draft.js (text editor)
 - Gemini AI API
-- Vercel (hosting and API)
+- Vercel
 
 ## Screenshots
 
-| Read Mail with AI | Daily Briefing |
-|---|---|
+| Read Mail with AI                                   | Daily Briefing                                          |
+| --------------------------------------------------- | ------------------------------------------------------- |
 | ![Read mail](screenshots/ai-mailbox-read-mail.webp) | ![Daily briefing](screenshots/ai-mailbox-briefing.webp) |
 
-| Compose with AI |
-|---|
+| Compose with AI                                 |
+| ----------------------------------------------- |
 | ![Compose](screenshots/ai-mailbox-compose.webp) |
 
 ## What I Learned
 
-- How to use AI in a real project, not just a chatbot
-- How to write prompts so AI gives answer in JSON
-- How to keep API key safe using a server file (`api/ai.js`)
-- How to show live data from Firestore
-- How to use Context API and useReducer for mails
+- How to use AI in a real project
+- How to write prompt so AI gives answer in JSON
+- How to keep API key safe on server side
+- How to get live data from Firestore
 
 ## Problems I Faced
 
-- Sometimes AI gave extra text with JSON. I removed it before reading the JSON.
-- When AI free limit was over, app was not showing anything. I added simple offline rules so app still works.
-- AI was checking the same mail again and again. I saved the AI result in Firestore so it runs only once.
+- Sometimes AI was giving extra text with JSON. I removed that text before reading it.
+- When free AI limit was over, nothing was showing. I added simple offline rules, now app works without AI also.
+- AI was checking same mail again and again. I saved AI result in Firestore, now it runs only one time.
 
 ## Future Plans
 
 - Add attachments in mail
 - Add calendar for meetings
-- Add email notification for urgent mails
+- Send notification for urgent mails
 
 ## How to Run
 
