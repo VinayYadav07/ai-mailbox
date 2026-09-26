@@ -4,12 +4,13 @@
 import { removeHtml, getNameFromEmail } from "../utils/helpers";
 
 const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
-const URGENT_WORDS = ["urgent", "asap", "immediately", "today", "down", "not working", "critical"];
-const ACTION_WORDS = ["review", "send", "share", "submit", "prepare", "update", "complete", "check", "call", "fix", "approve", "pay", "finish", "confirm"];
+const URGENT_WORDS = ["urgent", "asap", "immediately", "is down", "not working", "critical"];
+const ACTION_WORDS = ["review", "send", "share", "submit", "prepare", "update", "complete", "check", "fix", "approve", "pay", "finish", "confirm", "investigate", "reply", "sign", "book", "upload", "arrange"];
 const MEETING_WORDS = ["meeting", "call", "standup", "interview", "demo"];
 const FOLLOW_UP_WORDS = ["reminder", "following up", "follow up", "any update", "still waiting"];
-const REPLY_WORDS = ["?", "let me know", "please reply", "confirm", "share", "can you", "could you"];
+const REPLY_WORDS = ["?", "let me know", "please reply", "confirm", "can you", "could you"];
 
 // text me koi word hai ya nahi
 function hasWord(text, words) {
@@ -17,16 +18,35 @@ function hasWord(text, words) {
   return words.some((word) => small.includes(word));
 }
 
-// mail ko sentences me todna (Hi, Thanks jaisi lines hata ke)
+// mail ko sentences me todna
+// "Hi Vinay," "Thanks" aur naam wali chhoti lines hata di
 function getSentences(text) {
   return text
     .split(/[.!?\n]/)
     .map((line) => line.trim())
-    .filter((line) => line.length > 3)
+    .filter((line) => line.split(" ").length >= 3)
+    .filter((line) => !line.endsWith(","))
     .filter((line) => !/^(hi|hello|dear|hey|thanks|thank you|regards|best)\b/i.test(line));
 }
 
-// "Friday" ya "tomorrow" jaisa word dhoondhna
+// sentence ke shuru se please, also, could you jaise words hatana
+function cleanStart(sentence) {
+  return sentence.replace(/^(also|please|kindly|could you please|can you please|could you|can you)\s+/i, "").replace(/^(please|kindly)\s+/i, "");
+}
+
+// kaam wala sentence hai ya nahi - pehla word action word hona chahiye
+function isTask(sentence) {
+  const firstWord = cleanStart(sentence).split(" ")[0].toLowerCase();
+  return ACTION_WORDS.includes(firstWord);
+}
+
+// meeting wala sentence
+function isMeeting(sentence) {
+  const small = sentence.toLowerCase();
+  return MEETING_WORDS.some((word) => small.includes(word)) && (small.includes("join") || small.includes("attend") || small.includes("meeting"));
+}
+
+// "Friday", "tomorrow" ya "30 Sep" jaisa din dhoondhna
 function findDayWord(sentence) {
   const small = sentence.toLowerCase();
   if (small.includes("today")) return "Today";
@@ -35,7 +55,17 @@ function findDayWord(sentence) {
   const day = DAYS.find((d) => small.includes(d));
   if (day) return day[0].toUpperCase() + day.slice(1);
 
+  // 30 sep / 30 september
+  const match = small.match(/\b(\d{1,2})\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*/);
+  if (match) return match[1] + " " + match[2][0].toUpperCase() + match[2].slice(1);
+
   return null;
+}
+
+// "12 pm", "11 am" jaisa time dhoondhna
+function findTime(sentence) {
+  const match = sentence.match(/\b\d{1,2}(:\d{2})?\s?(am|pm)\b/i);
+  return match ? match[0] : "";
 }
 
 // day word ko date me badalna (YYYY-MM-DD)
@@ -43,16 +73,24 @@ function dayToDate(word) {
   if (!word) return null;
 
   const date = new Date();
-  if (word === "Tomorrow") date.setDate(date.getDate() + 1);
 
-  const index = DAYS.indexOf(word.toLowerCase());
-  if (index !== -1) {
-    let diff = index - date.getDay();
+  if (word === "Tomorrow") {
+    date.setDate(date.getDate() + 1);
+  } else if (DAYS.includes(word.toLowerCase())) {
+    let diff = DAYS.indexOf(word.toLowerCase()) - date.getDay();
     if (diff <= 0) diff = diff + 7;
     date.setDate(date.getDate() + diff);
+  } else if (word !== "Today") {
+    // "30 Sep" wala case
+    const parts = word.split(" ");
+    const month = MONTHS.indexOf(parts[1].toLowerCase());
+    if (month === -1) return null;
+    date.setMonth(month, Number(parts[0]));
   }
 
-  return date.toISOString().slice(0, 10);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 function analyzeMail({ mail, myEmail }) {
@@ -68,10 +106,15 @@ function analyzeMail({ mail, myEmail }) {
   sentences.forEach((sentence) => {
     const day = findDayWord(sentence);
 
-    if (hasWord(sentence, MEETING_WORDS)) {
-      meetings.push({ title: sentence, when: day || "Not mentioned", date: dayToDate(day) });
-    } else if (hasWord(sentence, ACTION_WORDS)) {
-      const task = sentence.split(/ by /i)[0];
+    if (isMeeting(sentence)) {
+      const time = findTime(sentence);
+      let title = cleanStart(sentence).split(/ at | on /i)[0];
+      title = title.charAt(0).toUpperCase() + title.slice(1);
+      const when = [day, time].filter(Boolean).join(" ") || "Not mentioned";
+      meetings.push({ title: title, when: when, date: dayToDate(day) });
+    } else if (isTask(sentence)) {
+      let task = cleanStart(sentence).split(/ by /i)[0];
+      task = task.charAt(0).toUpperCase() + task.slice(1);
       actions.push({ task: task, deadline: day, dueDate: dayToDate(day) });
     }
   });
@@ -84,7 +127,9 @@ function analyzeMail({ mail, myEmail }) {
   let priority = "Normal";
   let priorityReason = "Only information";
 
-  if (hasWord(subject + " " + text, URGENT_WORDS)) {
+  const dueToday = actions.some((item) => item.deadline === "Today");
+
+  if (hasWord(subject + " " + text, URGENT_WORDS) || dueToday) {
     priority = "Urgent";
     priorityReason = "Mail has urgent words";
   } else if (actions.length > 0 || meetings.length > 0) {

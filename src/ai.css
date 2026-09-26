@@ -595,7 +595,7 @@ textarea:focus-visible {
   padding: 8px 10px;
   margin-top: 8px;
 }
-.meeting-item strong { display: block; font-size: 14px; }
+.meeting-item strong { display: block; font-size: 14px; color: #212529; }
 .meeting-item span { display: block; font-size: 13px; color: var(--ai-ink); }
 .meeting-item small { color: var(--muted); }
 
